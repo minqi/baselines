@@ -27,7 +27,16 @@ def worker(remote, parent_remote, env_fn_wrappers):
                 break
             elif cmd == 'get_spaces_spec':
                 remote.send(CloudpickleWrapper((envs[0].observation_space, envs[0].action_space, envs[0].spec)))
+            elif cmd == 'seed':
+                new_seed = data
+                envs[0].seed(new_seed)
+                remote.send(envs[0].reset())
+            elif cmd == 'level_seed':
+                remote.send(envs[0].level_seed)
+            elif cmd == 'observe':
+                remote.send(envs[0].observation(envs[0].gen_obs()))
             else:
+                print(f'Not implemented {cmd} {data}')
                 raise NotImplementedError
     except KeyboardInterrupt:
         print('SubprocVecEnv worker: got KeyboardInterrupt')
