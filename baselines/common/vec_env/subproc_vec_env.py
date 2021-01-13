@@ -20,6 +20,8 @@ def worker(remote, parent_remote, env_fn_wrappers):
                 remote.send([step_env(env, action) for env, action in zip(envs, data)])
             elif cmd == 'reset':
                 remote.send([env.reset() for env in envs])
+            elif cmd == 'get_avail_actions':
+                remote.send([env.get_avail_actions() for env in envs])
             elif cmd == 'render':
                 remote.send([env.render(mode='rgb_array') for env in envs])
             elif cmd == 'close':
@@ -121,6 +123,14 @@ class SubprocVecEnv(VecEnv):
         imgs = [pipe.recv() for pipe in self.remotes]
         imgs = _flatten_list(imgs)
         return imgs
+
+    def get_avail_actions(self):
+        self._assert_not_closed()
+        for pipe in self.remotes:
+            pipe.send(('get_avail_actions', None))
+        avail_act = [pipe.recv() for pipe in self.remotes]
+        avail_act = _flatten_list(avail_act)
+        return avail_act
 
     def _assert_not_closed(self):
         assert not self.closed, "Trying to operate on a SubprocVecEnv after calling close()"
